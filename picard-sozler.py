@@ -21,9 +21,6 @@ import json
 from picard.metadata import register_track_metadata_processor
 from picard import log
 
-LRCLIB_HOST = "lrclib.net"
-LRCLIB_PORT = 443
-
 
 def log_debug(s):
     log.debug(f"{PLUGIN_NAME}: {s}")
@@ -68,10 +65,8 @@ def process_track(album, metadata, track, __):
         "duration": mins*60 + secs, # accepts seconds only
     }
     log_debug(f"trying to query with: {query}")
-    album.tagger.webservice.get(
-        LRCLIB_HOST,
-        LRCLIB_PORT,
-        "/api/get",
+    album.tagger.webservice.get_url(
+        url="https://lrclib.net/api/get",
         handler=partial(process_response, album, metadata),
         parse_response_type='json',
         queryargs=query,
