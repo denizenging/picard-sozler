@@ -23,54 +23,54 @@ from picard import log
 
 
 def log_debug(s):
-    log.debug(f"{PLUGIN_NAME}: {s}")
+	log.debug(f"{PLUGIN_NAME}: {s}")
 
 
 def log_err(s):
-    log.error(f"{PLUGIN_NAME}: {s}")
+	log.error(f"{PLUGIN_NAME}: {s}")
 
 
 def process_response(album, metadata, data, reply, error):
-    if error:
-        album._requests -= 1
-        album._finalize_loading(None)
-        return
+	if error:
+		album._requests -= 1
+		album._finalize_loading(None)
+		return
 
-    try:
-        log_debug("starting to process")
-        log_debug(f"got response: {data}")
-        instrumental = data.get("instrumental")
-        if instrumental:
-            log_debug("instrumental track; skipping")
-            lyrics = None
-        else:
-            # Fallbacks to plain, ie, unsynced lyrics.
-            lyrics = data.get("syncedLyrics") or data.get("plainLyrics")
+	try:
+		log_debug("starting to process")
+		log_debug(f"got response: {data}")
+		instrumental = data.get("instrumental")
+		if instrumental:
+			log_debug("instrumental track; skipping")
+			lyrics = None
+		else:
+			# Fallbacks to plain, ie, unsynced lyrics.
+			lyrics = data.get("syncedLyrics") or data.get("plainLyrics")
 
-        if lyrics is not None:
-            metadata["lyrics"] = lyrics
-    except AttributeError:
-        log_err(f"api malformed response: {data}")
-    finally:
-        album._requests -= 1
-        album._finalize_loading(None)
+		if lyrics is not None:
+			metadata["lyrics"] = lyrics
+	except AttributeError:
+		log_err(f"api malformed response: {data}")
+	finally:
+		album._requests -= 1
+		album._finalize_loading(None)
 
 
 def process_track(album, metadata, track, __):
-    (mins, secs) = map(int, metadata["~length"].split(":"))
-    query = {
-        "artist_name": metadata["albumartist"] or metadata["artist"],
-        "album_name": metadata["album"],
-        "track_name": metadata["title"],
-        "duration": mins*60 + secs, # accepts seconds only
-    }
-    log_debug(f"trying to query with: {query}")
-    album.tagger.webservice.get_url(
-        url="https://lrclib.net/api/get",
-        handler=partial(process_response, album, metadata),
-        parse_response_type='json',
-        queryargs=query,
-    )
-    album._requests += 1
+	(mins, secs) = map(int, metadata["~length"].split(":"))
+	query = {
+		"artist_name": metadata["albumartist"] or metadata["artist"],
+		"album_name": metadata["album"],
+		"track_name": metadata["title"],
+		"duration": mins*60 + secs, # accepts seconds only
+	}
+	log_debug(f"trying to query with: {query}")
+	album.tagger.webservice.get_url(
+		url="https://lrclib.net/api/get",
+		handler=partial(process_response, album, metadata),
+		parse_response_type='json',
+		queryargs=query,
+	)
+	album._requests += 1
 
 register_track_metadata_processor(process_track)
